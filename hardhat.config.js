@@ -13,10 +13,10 @@ require("@nomicfoundation/hardhat-verify");
 fournissant ainsi des valeurs pour les URL des nœuds de blockchain, la clé privée du compte et 
 la clé API d'Etherscan (si elles sont définies). Les || "" assurent que les valeurs sont initialisées 
 avec des chaînes vides par défaut si elles ne sont pas fournies dans le fichier .env. */
-// const SEPOLIA_RPC_URL = process.env.SEPOLIA_RPC_URL || "";
-// const MAINNET_RPC_URL = process.env.MAINNET_RPC_URL || "";
-// const PRIVATE_KEY = process.env.PRIVATE_KEY || "";
-// const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || "";
+const SEPOLIA_RPC_URL = process.env.SEPOLIA_RPC_URL || "";
+const MAINNET_RPC_URL = process.env.MAINNET_RPC_URL || "";
+const PRIVATE_KEY = process.env.PRIVATE_KEY || "";
+const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || "";
 
 module.exports = {
   // Spécifie le réseau par défaut pour Hardhat, qui est défini sur "hardhat".
@@ -24,28 +24,28 @@ module.exports = {
   // Définit les configurations pour différents réseaux. Dans cet exemple, 
   // il y a un réseau "sepolia" (chaine de blocs fictive) et un réseau "localhost"
   // pour le développement en local.
-  // networks: {
-  //   hardhat: {
-  //     forking: {
-  //       url: MAINNET_RPC_URL,
-  //     }
-  //   },
-  //   sepolia: {
-  //     url: SEPOLIA_RPC_URL,
-  //     accounts: [`0x${PRIVATE_KEY}`],
-  //     chainId: 11155111,
-  //     blockConfirmations: 6,
-  //   }
-  // },
+  networks: {
+    hardhat: {
+      forking: {
+        url: MAINNET_RPC_URL,
+      }
+    },
+    sepolia: {
+      url: SEPOLIA_RPC_URL,
+      accounts: [`0x${PRIVATE_KEY}`],
+      chainId: 11155111,
+      blockConfirmations: 6,
+    }
+  },
   // Active le rapporteur de gaz (gas reporter) pour afficher les coûts de gaz 
   // lors des déploiements et des transactions.
   gasReporter: {
     enabled: true,
   }, 
   // /!\  Permet de configurer la vérifications sur Etherscan
-  // etherscan: {
-  //   apiKey: ETHERSCAN_API_KEY,
-  // },
+  etherscan: {
+    apiKey: ETHERSCAN_API_KEY,
+  },
    // /!\ 
   // Configure les compilateurs Solidity utilisés par Hardhat. 
   // Dans cet exemple, la version "0.8.19" est spécifiée.
