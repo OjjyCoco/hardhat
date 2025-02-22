@@ -61,12 +61,15 @@ describe("Voting Contract", function () {
             expect(await voting.workflowStatus()).to.equal(1); // ProposalsRegistrationStarted
         });
 
-/*         it("Should register a proposal", async function () {
+        it("Should register a proposal", async function () {
             await voting.addVoter(voter1.address);
             await voting.startProposalsRegistering();
             await voting.connect(voter1).addProposal("Proposal 1")
-            expect(await voting.connect(voter1).getOneProposal(1)).to.equal(1)
-        }); */
+            // expect(await voting.connect(voter1).getOneProposal(1).description).to.equal("Proposal 1")
+            // Pourquoi la ligne ci-dessus fail ? AssertionError: expected undefined to equal 'Proposal 1'
+            const proposal = await voting.connect(voter1).getOneProposal(1); // Résolution de la promesse
+            expect(proposal.description).to.equal("Proposal 1");
+        });
         
         it("Should emit an event when registering a proposal", async function () {
             await voting.addVoter(voter1.address);
@@ -89,7 +92,7 @@ describe("Voting Contract", function () {
     });
 
     describe("Voting", function () {
-        it("Should allow registered voters to vote", async function () {
+        it("Should emit an event when a voter has voted", async function () {
             const { voting, voter1 } = await loadFixture(deployContract);
             await voting.addVoter(voter1.address);
             await voting.startProposalsRegistering();
@@ -98,6 +101,18 @@ describe("Voting Contract", function () {
             await voting.startVotingSession();
             await expect(voting.connect(voter1).setVote(0))
             .to.emit(voting, 'Voted').withArgs(voter1.address, 0);
+        });
+
+        it("Should allow registered voters to vote", async function () {
+            const { voting, voter1 } = await loadFixture(deployContract);
+            await voting.addVoter(voter1.address);
+            await voting.startProposalsRegistering();
+            await voting.connect(voter1).addProposal("Proposal 1");
+            await voting.endProposalsRegistering();
+            await voting.startVotingSession();
+            await voting.connect(voter1).setVote(0);
+            const voter = await voting.connect(voter1).getVoter(voter1.address);
+            expect(voter.hasVoted).to.be.true;
         });
         
         it("Should revert when voting before session starts", async function () {
@@ -116,6 +131,7 @@ describe("Voting Contract", function () {
 
     // Un peu bidon celui-là
     describe("Workflow Status Changes", function () {
+
         it("Should transition through all workflow statuses", async function () {
             const { voting } = await loadFixture(deployContract);
             await expect(voting.startProposalsRegistering())
@@ -130,6 +146,18 @@ describe("Voting Contract", function () {
             .to.emit(voting, 'WorkflowStatusChange');
             expect(await voting.workflowStatus()).to.equal(5); // VotesTallied
         });
+
+        it("Should create the GENESIS proposal on startProposalsRegistering WF status", async function () {
+            const { voting, voter1 } = await loadFixture(deployContract);
+            await voting.addVoter(voter1.address);
+            await voting.startProposalsRegistering();
+            const proposal = await voting.connect(voter1).getOneProposal(0); // Résolution de la promesse
+            expect(proposal.description).to.equal("GENESIS");
+        });
+
+        // Honnêtement un peu la flemme de tester tous les require de tous les changement de status
+        // Il y a pas une façon rapide / factorisée de le faire ?
+        
     });
 
     describe("Tally Votes", function () {
