@@ -29,6 +29,11 @@ describe("Voting Contract", function () {
             const voter = await voting.connect(voter1).getVoter(voter1.address);
             expect(voter.isRegistered).to.be.true;
         });
+
+        it("Should revert when register is already a voter", async function () {
+            await voting.addVoter(voter1.address);
+            await expect(voting.addVoter(voter1.address)).to.be.reverted;
+        });
         
         it("Should emit an event when registering a voter", async function () {
             await expect(voting.addVoter(voter1.address))
@@ -38,7 +43,6 @@ describe("Voting Contract", function () {
         // Peut-on faire les deux étapes ci-dessus en une seule ?
         // C.à.d faire seulement le deuxième it et considérer que si le test de l'event passe
         // alors celui du register aussi ?
-        // Je considère que oui dans la suite du code
         
         it("Should revert when not the owner", async function () {
             await expect(voting.connect(voter1).addVoter(owner.address)).to.be.reverted;
@@ -74,11 +78,14 @@ describe("Voting Contract", function () {
         it("Should register a proposal", async function () {
             await voting.addVoter(voter1.address);
             await voting.startProposalsRegistering();
-            await voting.connect(voter1).addProposal("Proposal 1")
-            // expect(await voting.connect(voter1).getOneProposal(1).description).to.equal("Proposal 1")
-            // Pourquoi la ligne ci-dessus fail ? AssertionError: expected undefined to equal 'Proposal 1'
-            const proposal = await voting.connect(voter1).getOneProposal(1); // Résolution de la promesse
+            await voting.connect(voter1).addProposal("Proposal 1");
+            const proposal = await voting.connect(voter1).getOneProposal(1);
             expect(proposal.description).to.equal("Proposal 1");
+        });
+
+        it("Should revert if wrong WorkflowStatus when trying to addProposal", async function () {
+            await voting.addVoter(voter1.address);
+            await expect(voting.connect(voter1).addProposal("Proposal 1")).to.be.reverted;
         });
         
         it("Should emit an event when registering a proposal", async function () {
@@ -103,7 +110,7 @@ describe("Voting Contract", function () {
         it("Should create the GENESIS proposal on startProposalsRegistering WF status", async function () {
             await voting.addVoter(voter1.address);
             await voting.startProposalsRegistering();
-            const proposal = await voting.connect(voter1).getOneProposal(0); // Résolution de la promesse
+            const proposal = await voting.connect(voter1).getOneProposal(0);
             await expect(proposal.description).to.equal("GENESIS");
         });
 
@@ -149,14 +156,36 @@ describe("Voting Contract", function () {
             await expect(voting.connect(voter1).setVote(0)).to.be.reverted;
         });
 
+        it("Should revert when not a registered voter", async function () {
+            await expect(voting.connect(voter1).setVote(0)).to.be.reverted;
+        });
+
+        it("Should revert when having already voted", async function () {
+            await voting.addVoter(voter1.address);
+            await voting.startProposalsRegistering();
+            await voting.connect(voter1).addProposal("Proposal 1");
+            await voting.endProposalsRegistering();
+            await voting.startVotingSession();
+            await voting.connect(voter1).setVote(1);
+            await expect(voting.connect(voter1).setVote(1)).to.be.reverted;
+        });
+
+        it("Should revert when proposal not found", async function () {
+            await voting.addVoter(voter1.address);
+            await voting.startProposalsRegistering();
+            await voting.connect(voter1).addProposal("Proposal 1");
+            await voting.endProposalsRegistering();
+            await voting.startVotingSession();
+            await expect(voting.connect(voter1).setVote(3)).to.be.reverted;
+        });
+
         it("Should revert when voter has already voted", async function () {
             await voting.addVoter(voter1.address);
-            voting.connect(voter1).setVote(0)
+            voting.connect(voter1).setVote(0);
             await expect(voting.connect(voter1).setVote(0)).to.be.reverted;
         });
     });
 
-    // Un peu bidon celui-là
     describe("Workflow Status Changes", function () {
 
         it("Should emit event when transitioning through all workflow statuses", async function () {
@@ -172,11 +201,7 @@ describe("Voting Contract", function () {
             await expect(voting.tallyVotes())
             .to.emit(voting, 'WorkflowStatusChange');
             expect(await voting.workflowStatus()).to.equal(5); // VotesTallied
-        });
-
-        // Honnêtement un peu la flemme de tester tous les require de tous les changement de status
-        // Il y a pas une façon rapide / factorisée de le faire?
-        
+        });        
     });
 
     describe("Tally Votes", function () {
@@ -220,7 +245,7 @@ describe("Voting Contract", function () {
         });
 
         // Pas besoin de faire le cas : Should determine the winning proposal (the first is the winner)
-        // Car les mêmes branch sont testées par Should determine the winning proposal (the first when draw)
+        // Car les mêmes Branch sont testées par Should determine the winning proposal (the first when draw)
 
         it("Should revert because wrong WorkflowStatus for tallyVotes", async function () {
             const { voting, voter1 } = await loadFixture(deployContract);
