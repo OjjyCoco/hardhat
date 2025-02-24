@@ -132,7 +132,7 @@ describe("Voting Contract", function () {
     // Un peu bidon celui-là
     describe("Workflow Status Changes", function () {
 
-        it("Should transition through all workflow statuses", async function () {
+        it("Should emit event when transitioning through all workflow statuses", async function () {
             const { voting } = await loadFixture(deployContract);
             await expect(voting.startProposalsRegistering())
             .to.emit(voting, 'WorkflowStatusChange');
