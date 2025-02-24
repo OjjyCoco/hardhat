@@ -156,7 +156,7 @@ describe("Voting Contract", function () {
         });
 
         // Honnêtement un peu la flemme de tester tous les require de tous les changement de status
-        // Il y a pas une façon rapide / factorisée de le faire ?
+        // Il y a pas une façon rapide / factorisée de le faire?
         
     });
 
