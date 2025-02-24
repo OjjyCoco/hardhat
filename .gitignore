@@ -3,6 +3,13 @@ node_modules
 .gitignore
 hardhat.config.js
 
+# Au cas où j'oublie de les supprimers des autres PC
+Lock.sol
+SimpleStorage.sol
+Lock.js
+SimpleStorage.test.js
+
+
 # Hardhat files
 /cache
 /artifacts
